@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SOAP Calculator API Demo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      max-width: 350px;
+      width: 100%;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+      margin-top: 15px;
+      border: none;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .result {
+      margin-top: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      color: green;
+    }
+    .error {
+      color: red;
+      font-size: 14px;
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>SOAP API Calculator</h2>
+  <label for="num1">First Number:</label>
+  <input type="number" id="num1" placeholder="Enter number" required>
+
+  <label for="num2">Second Number:</label>
+  <input type="number" id="num2" placeholder="Enter number" required>
+
+  <label for="operation">Operation:</label>
+  <select id="operation">
+    <option value="Add">Add</option>
+    <option value="Subtract">Subtract</option>
+    <option value="Multiply">Multiply</option>
+    <option value="Divide">Divide</option>
+  </select>
+
+  <button onclick="calculate()">Calculate</button>
+
+  <div id="result" class="result"></div>
+  <div id="error" class="error"></div>
+</div>
+
+<script>
+async function calculate() {
+  const num1 = document.getElementById('num1').value.trim();
+  const num2 = document.getElementById('num2').value.trim();
+  const operation = document.getElementById('operation').value;
+  const resultDiv = document.getElementById('result');
+  const errorDiv = document.getElementById('error');
+
+  resultDiv.textContent = '';
+  errorDiv.textContent = '';
+
+  if (!num1 || !num2) {
+    errorDiv.textContent = 'Please enter both numbers.';
+    return;
+  }
+
+  if (operation === 'Divide' && parseFloat(num2) === 0) {
+    errorDiv.textContent = 'Cannot divide by zero!';
+    return;
+  }
+
+  const soapBody = `<?xml version="1.0" encoding="utf-8"?>
+  <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                 xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap:Body>
+      <${operation} xmlns="http://tempuri.org/">
+        <intA>${num1}</intA>
+        <intB>${num2}</intB>
+      </${operation}>
+    </soap:Body>
+  </soap:Envelope>`;
+
+  try {
+    // Using a CORS proxy (you might need to request temporary access)
+    const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+    const targetUrl = 'http://www.dneonline.com/calculator.asmx';
+    
+    const response = await fetch(proxyUrl + targetUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/xml; charset=utf-8",
+        "SOAPAction": `http://tempuri.org/${operation}`,
+        "X-Requested-With": "XMLHttpRequest"
+      },
+      body: soapBody
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const text = await response.text();
+
+    // Extract result using regex
+    const regex = new RegExp(`<${operation}Result>(.*?)<\/${operation}Result>`);
+    const match = text.match(regex);
+    if (match && match[1]) {
+      resultDiv.textContent = `Result: ${match[1]}`;
+    } else {
+      throw new Error("Invalid SOAP response format");
+    }
+
+  } catch (err) {
+    errorDiv.textContent = "Error: " + err.message;
+    console.error("Calculation error:", err);
+  }
+}
+</script>
+
+</body>
+</html>
