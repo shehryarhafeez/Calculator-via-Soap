@@ -47,6 +47,14 @@
     button:hover {
       background: #0056b3;
     }
+     .cors-message {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
     .result {
       margin-top: 15px;
       font-size: 18px;
@@ -66,10 +74,10 @@
 
 <div class="container">
   <h2>SOAP API Calculator</h2>
-<a href="https://cors-anywhere.herokuapp.com/corsdemo">
-  <button>Click for temporary access</button>
-</a>
-
+  <div class="cors-message">
+            <strong>Note:</strong> You need to request temporary access to the demo server:
+            <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank">Click here</a> and then "Request temporary access to the demo server"
+        </div>
 
   <label for="num1">First Number:</label>
   <input type="number" id="num1" placeholder="Enter number" required>
